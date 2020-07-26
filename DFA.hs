@@ -22,7 +22,9 @@ data DFA a = DFA
 -- * F ⊆ Q.
 isValid :: (Ord a, Show a) => DFA a -> Bool
 isValid d =
-  q0 `elem` qs && all (`elem` qs) fs && all (`elem` qs) values
+  q0 `elem` qs
+    && all (`elem` qs) fs
+    && all (`elem` qs) values
   where
     qs = states d
     δ = transition d
