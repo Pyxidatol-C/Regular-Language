@@ -1,7 +1,7 @@
 module DFA where
 
-import Data.List (intercalate)
-import Data.Map hiding (filter, foldl, map)
+import qualified Data.List as L
+import qualified Data.Map as M
 
 data DFA a = DFA
   { -- | Q - a finite set, the states
@@ -9,7 +9,7 @@ data DFA a = DFA
     -- | Σ - a finite set, the alphabet
     alphabet :: [Char],
     -- | δ: QxΣ -> Q, the transition function
-    transition :: Map (a, Char) a,
+    transition :: M.Map (a, Char) a,
     -- | q0 ∈ Q, the start state
     startState :: a,
     -- | F ⊆ Q, the set of accept (or final) states
@@ -30,11 +30,11 @@ isValid d =
     fs = acceptStates d
 
     keys = [(q, a) | q <- qs, a <- alphabet d]
-    missingKeys = filter (`notMember` δ) keys
+    missingKeys = filter (`M.notMember` δ) keys
     values =
       if length missingKeys == 0
-        then map (δ !) keys
-        else error ("Missing: " ++ intercalate ", " (map show missingKeys))
+        then map (δ M.!) keys
+        else error $ "Missing: " ++ L.intercalate ", " (map show missingKeys)
 
 -- | sample DFA recognising the language { w | every odd position of w is a 1 }
 dOddOnes :: DFA String
@@ -43,7 +43,7 @@ dOddOnes =
     { states = ["even", "odd", "fail"],
       alphabet = ['0', '1'],
       transition =
-        fromList
+        M.fromList
           [ (("even", '0'), "fail"),
             (("even", '1'), "odd"),
             (("odd", '0'), "even"),
@@ -61,7 +61,7 @@ compute d = reverse . foldl f [q0]
   where
     q0 = startState d
     δ = transition d
-    f qs'@(q : qs) a = δ ! (q, a) : qs'
+    f qs'@(q : qs) a = δ M.! (q, a) : qs'
 
 -- | Simulate the DFA and return whether it accepts the string.
 accepts :: Ord a => DFA a -> String -> Bool
