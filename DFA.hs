@@ -2,18 +2,19 @@ module DFA where
 
 import qualified Data.List as L
 import qualified Data.Map as M
+import qualified Data.Set as S
 
 data DFA a = DFA
   { -- | Q - a finite set, the states
-    states :: [a],
+    states :: S.Set a,
     -- | Σ - a finite set, the alphabet
-    alphabet :: [Char],
+    alphabet :: S.Set Char,
     -- | δ: QxΣ -> Q, the transition function
     transition :: M.Map (a, Char) a,
     -- | q0 ∈ Q, the start state
     startState :: a,
     -- | F ⊆ Q, the set of accept (or final) states
-    acceptStates :: [a]
+    acceptStates :: S.Set a
   }
 
 -- | Checks if the given DFA (Q, Σ, δ, q0, F) is valid:
@@ -22,16 +23,18 @@ data DFA a = DFA
 -- * F ⊆ Q.
 isValid :: (Ord a, Show a) => DFA a -> Bool
 isValid d =
-  q0 `elem` qs
-    && all (`elem` qs) fs
-    && all (`elem` qs) values
+  q0 `S.member` qs
+    && all (`S.member` qs) fs
+    && all (`S.member` qs) values
   where
     qs = states d
+    qsList = S.toList qs
+    alphabetList = S.toList (alphabet d)
     δ = transition d
     q0 = startState d
     fs = acceptStates d
 
-    keys = [(q, a) | q <- qs, a <- alphabet d]
+    keys = [(q, a) | q <- qsList, a <- alphabetList]
     missingKeys = filter (`M.notMember` δ) keys
     values =
       if length missingKeys == 0
@@ -42,8 +45,8 @@ isValid d =
 dOddOnes :: DFA String
 dOddOnes =
   DFA
-    { states = ["even", "odd", "fail"],
-      alphabet = ['0', '1'],
+    { states = S.fromList ["even", "odd", "fail"],
+      alphabet = S.fromList ['0', '1'],
       transition =
         M.fromList
           [ (("even", '0'), "fail"),
@@ -54,7 +57,7 @@ dOddOnes =
             (("fail", '1'), "fail")
           ],
       startState = "even",
-      acceptStates = ["even", "odd"]
+      acceptStates = S.fromList ["even", "odd"]
     }
 
 -- | Compute the sequence of states when the DFA is computing on the string.
@@ -74,4 +77,4 @@ compute d = reverse . foldl f [q0]
 accepts :: Ord a => DFA a -> String -> Bool
 accepts d as =
   let q = last (d `compute` as)
-   in q `elem` acceptStates d
+   in q `S.member` acceptStates d

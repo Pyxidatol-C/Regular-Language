@@ -12,15 +12,15 @@ emptyStr = 'ε'
 
 data NFA a = NFA
   { -- | Q - a finite set, the states
-    states :: [a],
+    states :: S.Set a,
     -- | Σ - a finite set, the alphabet
-    alphabet :: [Char],
+    alphabet :: S.Set Char,
     -- | δ: Q x Σ_ε -> P(Q), the transition function
     transition :: Transition a,
     -- | q0 ∈ Q, the start state
     startState :: a,
     -- | F ⊆ Q, the set of accept (or final) states
-    acceptStates :: [a]
+    acceptStates :: S.Set a
   }
 
 -- | Checks if the given NFA (Q, Σ, δ, q0, F) is valid:
@@ -29,17 +29,18 @@ data NFA a = NFA
 -- * F ⊆ Q.
 isValid :: (Ord a, Show a) => NFA a -> Bool
 isValid n =
-  q0 `elem` qs
-    && all (`elem` qs) fs
-    && all (`S.isSubsetOf` qSet) values
+  q0 `S.member` qs
+    && all (`S.member` qs) fs
+    && all (`S.isSubsetOf` qs) values
   where
     qs = states n
-    qSet = S.fromList qs
+    qsList = S.toList qs
+    alphabetList = emptyStr : S.toList (alphabet n)
     δ = transition n
     q0 = startState n
     fs = acceptStates n
 
-    keys = [(q, a) | q <- qs, a <- emptyStr : alphabet n]
+    keys = [(q, a) | q <- qsList, a <- alphabetList]
     missingKeys = filter (`M.notMember` δ) keys
     values =
       if length missingKeys > 0
@@ -58,8 +59,8 @@ nOddOnes =
   let qs = ["even", "odd"]
       as = ['0', '1']
    in NFA
-        { states = qs,
-          alphabet = as,
+        { states = S.fromList qs,
+          alphabet = S.fromList as,
           transition =
             fromList
               qs
@@ -69,7 +70,7 @@ nOddOnes =
                 (("odd", '1'), "even")
               ],
           startState = "even",
-          acceptStates = ["even", "odd"]
+          acceptStates = S.fromList ["even", "odd"]
         }
 
 -- | Compute the sequence of states when the NFA is computing on the string.
