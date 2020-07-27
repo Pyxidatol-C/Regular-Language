@@ -1,7 +1,7 @@
 module DFA where
 
 import qualified Data.List as L
-import qualified Data.Map as M
+import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 
 data DFA a = DFA
@@ -22,10 +22,13 @@ data DFA a = DFA
 -- * q0 ∈ Q;
 -- * F ⊆ Q.
 isValid :: (Ord a, Show a) => DFA a -> Bool
-isValid d =
-  q0 `S.member` qs
-    && all (`S.member` qs) fs
-    && all (`S.member` qs) values
+isValid d
+  | length missingKeys > 0 =
+    error $ "Missing: " ++ L.intercalate ", " (map show missingKeys)
+  | otherwise =
+    q0 `S.member` qs
+      && all (`S.member` qs) fs
+      && all (`S.member` qs) values
   where
     qs = states d
     qsList = S.toList qs
@@ -36,10 +39,7 @@ isValid d =
 
     keys = [(q, a) | q <- qsList, a <- alphabetList]
     missingKeys = filter (`M.notMember` δ) keys
-    values =
-      if length missingKeys == 0
-        then map (δ M.!) keys
-        else error $ "Missing: " ++ L.intercalate ", " (map show missingKeys)
+    values = map (δ M.!) keys
 
 -- | sample DFA recognising the language { w | every odd position of w is a 1 }
 dOddOnes :: DFA String

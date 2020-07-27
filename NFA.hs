@@ -1,7 +1,7 @@
 module NFA where
 
 import qualified Data.List as L
-import qualified Data.Map as M
+import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 
 type Transition a = M.Map (a, Char) (S.Set a)
@@ -28,10 +28,13 @@ data NFA a = NFA
 -- * q0 ∈ Q;
 -- * F ⊆ Q.
 isValid :: (Ord a, Show a) => NFA a -> Bool
-isValid n =
-  q0 `S.member` qs
-    && all (`S.member` qs) fs
-    && all (`S.isSubsetOf` qs) values
+isValid n
+  | length missingKeys > 0 =
+    error $ "Missing: " ++ L.intercalate ", " (map show missingKeys)
+  | otherwise =
+    q0 `S.member` qs
+      && all (`S.member` qs) fs
+      && all (`S.isSubsetOf` qs) values
   where
     qs = states n
     qsList = S.toList qs
@@ -42,45 +45,63 @@ isValid n =
 
     keys = [(q, a) | q <- qsList, a <- alphabetList]
     missingKeys = filter (`M.notMember` δ) keys
-    values =
-      if length missingKeys > 0
-        then error $ "Missing: " ++ L.intercalate ", " (map show missingKeys)
-        else map (δ M.!) keys
+    values = map (δ M.!) keys
 
-fromList :: Ord a => [a] -> [Char] -> [((a, Char), a)] -> Transition a
-fromList qs as = foldr f e
+-- | Fill the transition function by assigning ∅ to the missing keys of Q x Σ_ε.
+fillTransition :: Ord a => S.Set a -> S.Set Char -> Transition a -> Transition a
+fillTransition qs as transition = M.union transition transition'
   where
-    e = M.fromList [((q, a), S.empty) | q <- qs, a <- emptyStr : as]
-    f ((q, a), q') m = M.adjust (S.insert q') (q, a) m
+    qsList = S.toList qs
+    asList = emptyStr : S.toList as
+    keys = [(q, a) | q <- qsList, a <- asList]
+    keys' = filter (`M.notMember` transition) keys
+    transition' = M.fromList [(k, S.empty) | k <- keys']
 
 -- | sample NFA recognising the language { w | every odd position of w is a 1 }
 nOddOnes :: NFA String
 nOddOnes =
-  let qs = ["even", "odd"]
-      as = ['0', '1']
+  let qs = S.fromList ["even", "odd"]
+      as = S.fromList ['0', '1']
    in NFA
-        { states = S.fromList qs,
-          alphabet = S.fromList as,
+        { states = qs,
+          alphabet = as,
           transition =
-            fromList
+            fillTransition
               qs
               as
-              [ (("even", '1'), "odd"),
-                (("odd", '0'), "even"),
-                (("odd", '1'), "even")
-              ],
+              ( M.fromList
+                  [ (("even", '1'), S.fromList ["odd"]),
+                    (("odd", '0'), S.fromList ["even"]),
+                    (("odd", '1'), S.fromList ["even"])
+                  ]
+              ),
           startState = "even",
           acceptStates = S.fromList ["even", "odd"]
         }
 
+statesReachableAlongεArrowsFrom :: Ord a => NFA a -> S.Set a -> S.Set a
+statesReachableAlongεArrowsFrom n qs =
+  S.unions qss
+  where
+    iterateUntilFix f x
+      | x' == x = [x]
+      | otherwise = x : iterateUntilFix f x'
+      where
+        x' = f x
+    qss = iterateUntilFix g qs
+    statesReachableFrom q = transition n M.! (q, emptyStr)
+    g qs = S.unions (S.map statesReachableFrom qs)
+
 -- | Compute the sequence of states when the NFA is computing on the string.
 compute :: Ord a => NFA a -> String -> [S.Set a]
-compute d = reverse . foldl f [S.singleton q0]
+compute n = reverse . foldl f [q0']
   where
-    q0 = startState d
-    δ = transition d
-    f qss'@(qs : qss) a = S.foldr S.union S.empty (S.map g qs) : qss'
+    q0 = S.singleton (startState n)
+    q0' = statesReachableAlongεArrowsFrom n (q0)
+    δ = transition n
+    f qss'@(qs : qss) a = statesReachableAlongεArrowsFrom n qs' : qss'
       where
+        qs' = S.foldr S.union S.empty (S.map g qs)
         g q = δ M.! (q, a)
 
 -- | Simulate the NFA and return whether it accepts the string.
@@ -94,3 +115,26 @@ accepts :: Ord a => NFA a -> String -> Bool
 accepts d as =
   let qs = last (d `compute` as)
    in any (`elem` acceptStates d) qs
+
+-- | Rename the states by applying f to obtain an equivalent/isomorphic NFA.
+mapStates :: (Ord a, Ord b) => (a -> b) -> NFA a -> NFA b
+mapStates f n =
+  NFA
+    { states = mapSet (states n),
+      alphabet = alphabet n,
+      transition = mapTransition (transition n),
+      startState = f (startState n),
+      acceptStates = mapSet (acceptStates n)
+    }
+  where
+    mapSet = S.map f
+    mapFst (q, a) = (f q, a)
+    mapTransition = M.map mapSet . M.mapKeys mapFst
+
+-- | Get an equivalent NFA by numbering the states from 0 to #states - 1.
+numberStates :: Ord a => NFA a -> NFA Int
+numberStates n = mapStates number n
+  where
+    qs = S.toList (states n)
+    num = M.fromList $ zipWith (,) qs [1 ..]
+    number = (num M.!)
