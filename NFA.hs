@@ -24,6 +24,7 @@ data NFA a = NFA
   }
 
 -- | Checks if the given NFA (Q, Σ, δ, q0, F) is valid:
+--
 -- * δ(Q x Σ_ε) ⊆ P(Q);
 -- * q0 ∈ Q;
 -- * F ⊆ Q.
@@ -111,6 +112,7 @@ compute n = reverse . foldl f [q0']
 -- Formally, an NFA (Q, Σ, δ, q0, F) accepts a string w if w can be written as
 -- w = y_1...y_n where each y_i ∈ Σ_ε and a sequence of states r_0, r_1, ...,
 -- r_m in Q exists satisfying:
+--
 -- * r_0 = q0;
 -- * δ(r_i, y_i+1) ∈ r_i+1 for i = 0..m-1;
 -- * r_m ∈ F.

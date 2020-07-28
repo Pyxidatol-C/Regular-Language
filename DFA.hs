@@ -18,6 +18,7 @@ data DFA a = DFA
   }
 
 -- | Checks if the given DFA (Q, Σ, δ, q0, F) is valid:
+--
 -- * δ is total on QxΣ, and δ(QxΣ) ⊆ Q;
 -- * q0 ∈ Q;
 -- * F ⊆ Q.
@@ -72,6 +73,7 @@ compute d = reverse . foldl f [q0]
 --
 -- Formally, a DFA (Q, Σ, δ, q0, F) accepts a string w = w_1...w_n if a
 -- sequence of states r_0, r_1, ..., r_n in Q exists satisfying:
+--
 -- * r_0 = q0;
 -- * δ(r_i, w_i+1) = r_i+1 for i = 0..n-1;
 -- * r_n ∈ F.
