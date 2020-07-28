@@ -69,6 +69,7 @@ compute d = reverse . foldl f [q0]
     f qs'@(q : qs) a = δ M.! (q, a) : qs'
 
 -- | Simulate the DFA and return whether it accepts the string.
+--
 -- Formally, a DFA (Q, Σ, δ, q0, F) accepts a string w = w_1...w_n if a
 -- sequence of states r_0, r_1, ..., r_n in Q exists satisfying:
 -- * r_0 = q0;

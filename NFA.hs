@@ -79,6 +79,8 @@ nOddOnes =
           acceptStates = S.fromList ["even", "odd"]
         }
 
+-- | Compute the set of states reachable from the given set by following 0 or
+-- more ε arrows.
 statesReachableAlongεArrowsFrom :: Ord a => NFA a -> S.Set a -> S.Set a
 statesReachableAlongεArrowsFrom n qs =
   S.unions qss
@@ -105,6 +107,7 @@ compute n = reverse . foldl f [q0']
         g q = δ M.! (q, a)
 
 -- | Simulate the NFA and return whether it accepts the string.
+--
 -- Formally, an NFA (Q, Σ, δ, q0, F) accepts a string w if w can be written as
 -- w = y_1...y_n where each y_i ∈ Σ_ε and a sequence of states r_0, r_1, ...,
 -- r_m in Q exists satisfying:
