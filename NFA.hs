@@ -49,6 +49,12 @@ isValid n
     values = map (δ M.!) keys
 
 -- | Fill the transition function by assigning ∅ to the missing keys of Q x Σ_ε.
+--
+-- For example, the total transition function for the NFA recognising the empty
+-- set, with the alphabet being {a, b} (\\949 is 'emptyStr'):
+--
+-- >>> fillTransition (S.fromList [0]) (S.fromList ['a', 'b']) M.empty
+-- fromList [((0,'a'),fromList []),((0,'b'),fromList []),((0,'\949'),fromList [])]
 fillTransition :: Ord a => S.Set a -> S.Set Char -> Transition a -> Transition a
 fillTransition qs as transition = M.union transition transition'
   where
@@ -59,6 +65,15 @@ fillTransition qs as transition = M.union transition transition'
     transition' = M.fromList [(k, S.empty) | k <- keys']
 
 -- | sample NFA recognising the language { w | every odd position of w is a 1 }
+--
+-- >>> nOddOnes `accepts` "10101"
+-- True
+--
+-- >>> nOddOnes `accepts` "000"
+-- False
+--
+-- >>> nOddOnes `accepts` ""
+-- True
 nOddOnes :: NFA String
 nOddOnes =
   let qs = S.fromList ["even", "odd"]

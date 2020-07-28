@@ -43,6 +43,15 @@ isValid d
     values = map (δ M.!) keys
 
 -- | sample DFA recognising the language { w | every odd position of w is a 1 }
+--
+-- >>> dOddOnes `accepts` "10101"
+-- True
+--
+-- >>> dOddOnes `accepts` "000"
+-- False
+--
+-- >>> dOddOnes `accepts` ""
+-- True
 dOddOnes :: DFA String
 dOddOnes =
   DFA

@@ -3,6 +3,7 @@ module NFA_ where
 import qualified DFA
 import qualified Data.Map as M
 import qualified Data.Set as S
+import qualified Regexp as R
 import NFA
 
 -- | Convert a DFA into an NFA - every DFA is (almost) automatically an NFA.
@@ -138,3 +139,63 @@ star n =
         (M.unionWith S.union emptyStrArrows (transition n'))
     q0' = S.size (states n') -- max (states n') + 1
     acceptStates' = S.singleton q0' `S.union` acceptStates n'
+
+-- | Construct an NFA recognising the language of the regular expression.
+--
+-- >>> (fromRegexp (S.fromList "ab") R.Empty) `accepts` ""
+-- False
+--
+-- >>> (fromRegexp (S.fromList "ab") R.Single_ε) `accepts` ""
+-- True
+--
+-- >>> (fromRegexp (S.fromList "ab") (R.plus (R.Single 'a'))) `accepts` ""
+-- False
+-- >>> (fromRegexp (S.fromList "ab") (R.plus (R.Single 'a'))) `accepts` "aaaaa"
+-- True
+--
+-- >>> (fromRegexp (S.fromList "ab") (R.Star (R.Single 'a'))) `accepts` "aaaaa"
+-- True
+--
+-- >>> (fromRegexp (S.fromList "ab") ((R.Single 'a') `R.exp` 2)) `accepts` "aa"
+-- True
+-- >>> (fromRegexp (S.fromList "ab") ((R.Single 'a') `R.exp` 2)) `accepts` "a"
+-- False
+fromRegexp :: S.Set Char -> R.Regexp -> NFA Int
+fromRegexp alphabet' r = case r of
+  R.Single c ->
+    let q0 = 0
+        q' = 1 -- Accept state
+        qs = S.fromList [q0, q']
+        qs' = S.singleton q'
+        delta = M.singleton (q0, c) qs'
+     in NFA
+          { states = qs,
+            alphabet = alphabet',
+            transition = fillTransition qs alphabet' delta,
+            startState = q0,
+            acceptStates = qs'
+          }
+  R.Single_ε ->
+    let q0 = 0
+        qs = S.singleton q0
+     in NFA
+          { states = qs,
+            alphabet = alphabet',
+            transition = fillTransition qs alphabet' M.empty,
+            startState = q0,
+            acceptStates = qs
+          }
+  R.Empty ->
+    let q0 = 0
+        qs = S.singleton q0
+     in NFA
+          { states = qs,
+            alphabet = alphabet',
+            transition = fillTransition qs alphabet' M.empty,
+            startState = q0,
+            acceptStates = S.empty
+          }
+  R.Union r1 r2 -> fromRegexp alphabet' r1 `union` fromRegexp alphabet' r2
+  R.Concat r1 r2 ->
+    fromRegexp alphabet' r1 `NFA_.concat` fromRegexp alphabet' r2
+  R.Star r' -> star (fromRegexp alphabet' r')
