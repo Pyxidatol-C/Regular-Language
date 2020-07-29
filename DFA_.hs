@@ -7,6 +7,60 @@ import qualified NFA as NFA
 import qualified NFA_ as NFA_
 import qualified Regexp as R
 
+-- | Construct the complement the DFA.
+--
+-- Formally, given a DFA D recognising the language A, the complement D'
+-- recognises the language A^C = { w | w ∈ Σ*, w ∉ A }.
+--
+-- >>> (complement dOddOnes) `accepts` "101"
+-- False
+--
+-- >>> (complement dOddOnes) `accepts` "0"
+-- True
+complement :: Ord a => DFA a -> DFA a
+complement d = d {acceptStates = states d S.\\ acceptStates d}
+
+-- | Construct the intersection of the 2 DFAs.
+--
+-- Formally, given DFAs D1 and D2 recognising the languages A1 and A2, the
+-- interesction of D1 and D2 recognise the language A1 ∩ A2.
+intersect :: (Ord a, Ord b) => DFA a -> DFA b -> DFA (a, b)
+intersect d1 d2
+  | alphabet d1 /= alphabet d2 = error "Different alphabets"
+  | otherwise =
+    DFA
+      { states = states',
+        alphabet = alphabet',
+        transition = transition',
+        startState = startState',
+        acceptStates = acceptStates'
+      }
+  where
+    states' = S.cartesianProduct (states d1) (states d2)
+    statesList = S.toList states'
+    alphabet' = alphabet d1
+    alphabetList = S.toList alphabet'
+    δ1 = transition d1
+    δ2 = transition d2
+    transition' =
+      M.fromList
+        [ ((q, a), (δ1 M.! (q1, a), δ2 M.! (q2, a)))
+          | q@(q1, q2) <- statesList,
+            a <- alphabetList
+        ]
+    startState' = (startState d1, startState d2)
+    acceptStates' = S.filter isAccept states'
+    isAccept (q1, q2) =
+      q1 `S.member` acceptStates d1
+        && q2 `S.member` acceptStates d2
+
+-- | Construct a DFA that is equivalent to the NFA.
+--
+-- Idea: Given an NFA N = (Q, Σ, δ, q0, F), the set of states of the equivalent
+-- DFA D is the power set of Q; the start state is the set of states reachable
+-- from q0 following 0 or more ε arrows; the accept states are the sets which
+-- contain a member of F; the transition function keeps track of the set of
+-- states that the NFA would be in.
 fromNFA :: Ord a => NFA.NFA a -> DFA (S.Set a)
 fromNFA n =
   DFA
@@ -35,6 +89,3 @@ fromNFA n =
     startState' = reachε q0
     isAcceptInNFA = (`S.member` NFA.acceptStates n)
     acceptStates' = S.filter (any isAcceptInNFA) states'
-
-fromRegexp :: S.Set Char -> R.Regexp -> DFA (S.Set Int)
-fromRegexp alphabet' = fromNFA . (NFA_.fromRegexp alphabet')
