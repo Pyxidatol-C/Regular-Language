@@ -136,7 +136,8 @@ accepts d as =
   let qs = last (d `compute` as)
    in any (`elem` acceptStates d) qs
 
--- | Rename the states by applying f to obtain an equivalent/isomorphic NFA.
+-- | Rename the states by applying f to obtain an equivalent/isomorphic NFA,
+-- provided that f is bijective.
 mapStates :: (Ord a, Ord b) => (a -> b) -> NFA a -> NFA b
 mapStates f n =
   NFA
@@ -156,5 +157,5 @@ numberStates :: Ord a => NFA a -> NFA Int
 numberStates n = mapStates number n
   where
     qs = S.toList (states n)
-    num = M.fromList $ zipWith (,) qs [1 ..]
+    num = M.fromList $ zipWith (,) qs [0 ..]
     number = (num M.!)

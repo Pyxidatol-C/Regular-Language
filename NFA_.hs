@@ -1,7 +1,7 @@
 module NFA_ where
 
 import qualified DFA
-import qualified Data.Map as M
+import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 import qualified Regexp as R
 import NFA
@@ -48,10 +48,7 @@ union n1 n2
     states' = S.singleton q0' `S.union` states n1' `S.union` states n2'
     alphabet' = alphabet n1 -- same as alphabet n2
     emptyStrArrows =
-      M.fromList
-        [ ((q0', emptyStr), S.singleton (startState n1')),
-          ((q0', emptyStr), S.singleton (startState n2'))
-        ]
+      M.singleton (q0', emptyStr) (S.fromList [startState n1', startState n2'])
     transition' =
       fillTransition
         states'
