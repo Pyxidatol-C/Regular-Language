@@ -11,7 +11,7 @@ data Regexp
 
 instance Show Regexp where
   show r = case r of
-    Single x -> show x
+    Single x -> [x]
     Single_ε -> "ε"
     Empty -> "∅"
     Union r1 r2 -> "(" ++ show r1 ++ "∪" ++ show r2 ++ ")"
@@ -34,10 +34,21 @@ exp r k
 {- Properties
 -}
 simplify :: Regexp -> Regexp
-simplify (Union Empty r) = r -- ∅ acts as identity for ∪
-simplify (Union r Empty) = r
-simplify (Concat Single_ε r) = r -- ε acts as identity for ∘
-simplify (Concat r Single_ε) = r
+simplify (Union Empty r) = simplify r -- ∅ acts as identity for ∪
+simplify (Union r Empty) = simplify r
+simplify (Union r1 r2) = Union (simplify r1) (simplify r2)
+simplify (Concat Single_ε r) = simplify r -- ε acts as identity for ∘
+simplify (Concat r Single_ε) = simplify r
 simplify (Concat Empty _) = Empty -- ∅ acts as zero for ∘
 simplify (Concat _ Empty) = Empty
+simplify (Concat r1 r2) = Concat (simplify r1) (simplify r2)
 simplify (Star Empty) = Single_ε -- (*) can only put together 0 strings from ∅
+simplify (Star r) = Star (simplify r)
+simplify r = r
+
+repeatedly :: Eq a => (a -> a) -> a -> a
+repeatedly f x = g x (f x)
+  where
+    g x x'
+      | x == x' = x
+      | otherwise = g x' (f x')
