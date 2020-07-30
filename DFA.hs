@@ -90,3 +90,25 @@ accepts :: Ord a => DFA a -> String -> Bool
 accepts d as =
   let q = last (d `compute` as)
    in q `S.member` acceptStates d
+
+-- | Rename the states by applying f to obtain an equivalent/isomorphic DFA,
+-- provided that f is bijective.
+mapStates :: (Ord a, Ord b) => (a -> b) -> DFA a -> DFA b
+mapStates f d =
+  d
+    { states = S.map f (states d),
+      startState = f (startState d),
+      transition = mapTransition f (transition d),
+      acceptStates = S.map f (acceptStates d)
+    }
+  where
+    mapFst (q, a) = (f q, a)
+    mapTransition f = M.map f . M.mapKeys mapFst
+
+-- | Get an equivalent NFA by numbering the states from 0 to #states - 1.
+numberStates :: Ord a => DFA a -> DFA Int
+numberStates d = mapStates number d
+  where
+    qsList = S.toList (states d)
+    num = M.fromList $ zip qsList [0 ..]
+    number = (num M.!)

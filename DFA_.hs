@@ -3,8 +3,8 @@ module DFA_ where
 import DFA
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
-import qualified NFA as NFA
-import qualified NFA_ as NFA_
+import qualified NFA
+import qualified NFA_
 import qualified Regexp as R
 
 -- | Construct the complement the DFA.

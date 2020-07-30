@@ -140,9 +140,8 @@ accepts d as =
 -- provided that f is bijective.
 mapStates :: (Ord a, Ord b) => (a -> b) -> NFA a -> NFA b
 mapStates f n =
-  NFA
+  n
     { states = mapSet (states n),
-      alphabet = alphabet n,
       transition = mapTransition (transition n),
       startState = f (startState n),
       acceptStates = mapSet (acceptStates n)
@@ -157,5 +156,5 @@ numberStates :: Ord a => NFA a -> NFA Int
 numberStates n = mapStates number n
   where
     qs = S.toList (states n)
-    num = M.fromList $ zipWith (,) qs [0 ..]
+    num = M.fromList $ zip qs [0 ..]
     number = (num M.!)
