@@ -1,3 +1,4 @@
+-- | Operations on DFAs and conversion from NFAs
 module DFA_ where
 
 import DFA

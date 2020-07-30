@@ -1,3 +1,4 @@
+-- | Conversions from DFAs and NFAs
 module GNFA_ where
 
 import qualified DFA

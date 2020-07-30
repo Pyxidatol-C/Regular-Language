@@ -1,9 +1,11 @@
+-- | Definition, construction, computation and transformation of DFAs
 module DFA where
 
 import qualified Data.List as L
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 
+-- | Deterministic finite automata
 data DFA a = DFA
   { -- | Q - a finite set, the states
     states :: S.Set a,

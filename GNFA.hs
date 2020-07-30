@@ -1,3 +1,4 @@
+-- | Definition, construction and reduction of GNFAs
 module GNFA where
 
 import qualified Data.Map as M

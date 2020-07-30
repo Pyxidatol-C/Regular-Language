@@ -1,3 +1,4 @@
+-- | Definition, construction, computation and transformation of NFAs
 module NFA where
 
 import qualified Data.List as L
@@ -10,6 +11,7 @@ type Transition a = M.Map (a, Char) (S.Set a)
 emptyStr :: Char
 emptyStr = 'ε'
 
+-- | Nondetermisnitic finite automata
 data NFA a = NFA
   { -- | Q - a finite set, the states
     states :: S.Set a,

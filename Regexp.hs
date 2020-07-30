@@ -1,5 +1,7 @@
+-- | Definition and simplification of regular expressions
 module Regexp where
 
+-- | Regular expressions
 data Regexp
   = Single Char
   | Single_ε
@@ -18,21 +20,10 @@ instance Show Regexp where
     Concat r1 r2 -> "(" ++ show r1 ++ show r2 ++ ")"
     Star r -> "(" ++ show r ++ "*)"
 
-{- Shorhtands
--}
-
--- | R+ is shorthand for RR*.
-plus :: Regexp -> Regexp
-plus r = r `Concat` (Star r)
-
--- | R^k is shorthand for the concatenation of k R's with each other.
-exp :: Regexp -> Int -> Regexp
-exp r k
-  | k <= 0 = error "Exponent must be strictly positive"
-  | otherwise = foldr1 Concat (replicate k r)
-
-{- Properties
--}
+-- | Simplify a regexp recursively.
+--
+-- >>> simplify $ Star Empty `Concat` Single 'a'
+-- (εa)
 simplify :: Regexp -> Regexp
 simplify (Union Empty r) = simplify r -- ∅ acts as identity for ∪
 simplify (Union r Empty) = simplify r
@@ -46,6 +37,10 @@ simplify (Star Empty) = Single_ε -- (*) can only put together 0 strings from �
 simplify (Star r) = Star (simplify r)
 simplify r = r
 
+-- | Repeatedly apply f to the argument x until the fix point is reached.
+--
+-- >>> repeatedly simplify $ Star Empty `Concat` Single 'a'
+-- a
 repeatedly :: Eq a => (a -> a) -> a -> a
 repeatedly f x = g x (f x)
   where

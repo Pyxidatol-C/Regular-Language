@@ -1,3 +1,4 @@
+-- | Operations on NFAs and conversion from DFAs and Regexps
 module NFA_ where
 
 import qualified DFA
