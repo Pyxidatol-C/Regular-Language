@@ -31,6 +31,7 @@ fromDFA :: Ord a => DFA.DFA a -> Regexp
 fromDFA = GNFA.convert . GNFA_.fromDFA
 
 -- | Convert an NFA into a regexp.
+--
 -- >>> fromNFA NFA.nOddOnes
 -- (((1(((1∪0)1)*))((1∪0)∪ε))∪ε)
 fromNFA :: Ord a => NFA.NFA a -> Regexp
