@@ -114,3 +114,25 @@ numberStates d = mapStates number d
     qsList = S.toList (states d)
     num = M.fromList $ zip qsList [0 ..]
     number = (num M.!)
+
+reachableStates :: Ord a => DFA a -> S.Set a
+reachableStates d = dfsExplore S.empty [startState d]
+  where
+    dfsExplore visited [] = visited
+    dfsExplore visited (v : vs) = dfsExplore visited' vs'
+      where
+        visited' = S.insert v visited
+        vNeighbours = S.map vUpon (alphabet d)
+        vUpon a = (transition d) M.! (v, a)
+        vs' =
+          [ u
+            | u <- S.toList vNeighbours,
+              u `S.notMember` visited',
+              u `notElem` vs
+          ]
+            ++ vs
+
+isLanguageEmpty :: Ord a => DFA a -> Bool
+isLanguageEmpty d = S.null qs
+  where
+    qs = (reachableStates d) `S.intersection` (acceptStates d)
