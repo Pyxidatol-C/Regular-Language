@@ -132,7 +132,76 @@ reachableStates d = dfsExplore S.empty [startState d]
           ]
             ++ vs
 
+removeUnreachableStates :: Ord a => DFA a -> DFA a
+removeUnreachableStates d =
+  d
+    { states = qs,
+      transition = M.filterWithKey f (transition d),
+      acceptStates = S.filter (`S.member` qs) (acceptStates d)
+    }
+  where
+    qs = reachableStates d
+    f (q, _) q' = q `S.member` qs && q' `S.member` qs
+
 isLanguageEmpty :: Ord a => DFA a -> Bool
 isLanguageEmpty d = S.null qs
   where
     qs = (reachableStates d) `S.intersection` (acceptStates d)
+
+equivalentStates :: Ord a => DFA a -> [(a, a)]
+equivalentStates d = f startPairs
+  where
+    as = S.toList (alphabet d)
+    qs = S.toList (states d)
+    delta = transition d
+    fs = acceptStates d
+    allPairs = [(x, y) | x <- qs, y <- qs]
+    startPairs =
+      [(x, y) | (x, y) <- allPairs, x `S.member` fs == y `S.member` fs]
+    f pairs
+      | length pairs' < length pairs = f pairs'
+      | otherwise = pairs
+      where
+        pairs' =
+          [ (x, y)
+            | (x, y) <- pairs,
+              and [(delta M.! (x, a), delta M.! (y, a)) `elem` pairs | a <- as]
+          ]
+
+equivalenceClasses :: Ord a => [a] -> [(a, a)] -> [S.Set a]
+equivalenceClasses xs r = merge r (map S.singleton xs)
+  where
+    merge [] xss = xss
+    merge ((y, z) : rs) xss = merge rs xss'
+      where
+        [ys] = filter (S.member y) xss
+        [zs] = filter (S.member z) xss
+        xss' =
+          (ys `S.union` zs) :
+            [xs | xs <- xss, y `S.notMember` xs && z `S.notMember` xs]
+
+minimize :: Ord a => DFA a -> DFA (S.Set a)
+minimize d' =
+  DFA
+    { states = S.fromList qss,
+      alphabet = alphabet d,
+      transition = delta',
+      startState = qs0,
+      acceptStates = S.fromList fs
+    }
+  where
+    d = removeUnreachableStates d'
+    as = S.toList (alphabet d)
+    qss = equivalenceClasses (S.toList (states d)) (equivalentStates d)
+    delta = transition d
+    classOf q = head [qs | qs <- qss, q `S.member` qs]
+    qs0 = classOf (startState d)
+    delta' =
+      M.fromList
+        [ ((qs, a), classOf q')
+          | qs <- qss,
+            a <- as,
+            let q = S.elemAt 0 qs,
+            let q' = delta M.! (q, a)
+        ]
+    fs = [qs | qs <- qss, not $ S.null (acceptStates d `S.intersection` qs)]
