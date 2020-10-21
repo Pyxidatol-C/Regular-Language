@@ -90,3 +90,25 @@ fromNFA n =
     startState' = reachε q0
     isAcceptInNFA = (`S.member` NFA.acceptStates n)
     acceptStates' = S.filter (any isAcceptInNFA) states'
+
+fromNFA' :: Ord a => NFA.NFA a -> DFA (S.Set (S.Set a))
+fromNFA' = minimize . fromNFA
+
+equivalent :: (Ord a, Ord b) => DFA a -> DFA b -> Bool
+equivalent d1 d2 =
+  DFA.isLanguageEmpty d1Diffd2 && DFA.isLanguageEmpty d2Diffd1
+  where
+    d1Diffd2 = d1 `intersect` complement d2
+    d2Diffd1 = d2 `intersect` complement d1
+
+fromRegexp :: S.Set Char -> R.Regexp -> DFA (S.Set (S.Set Int))
+fromRegexp alphabet r = case r of
+  R.Empty -> toDFA r
+  R.Single_ε -> toDFA r
+  R.Single _ -> toDFA r
+  R.Union x y -> fromNFA' (fromRegexp' x `NFA_.union` fromRegexp' y)
+  R.Concat x y -> fromNFA' (fromRegexp' x `NFA_.concat` fromRegexp' y)
+  R.Star x -> fromNFA' (NFA_.star (fromRegexp' x))
+  where
+    toDFA = fromNFA' . NFA_.fromRegexp alphabet
+    fromRegexp' = NFA_.fromDFA . fromRegexp alphabet

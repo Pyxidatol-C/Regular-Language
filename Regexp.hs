@@ -20,6 +20,26 @@ instance Show Regexp where
     Concat r1 r2 -> "(" ++ show r1 ++ show r2 ++ ")"
     Star r -> "(" ++ show r ++ "*)"
 
+instance Num Regexp where
+  r1 + r2 = r1 `Union` r2
+  r1 * r2 = r1 `Concat` r2
+
+-- | R+ is shorthand for RR*.
+--
+-- >>> plus (Single 'a')
+-- (a(a*))
+plus :: Regexp -> Regexp
+plus r = r `Concat` (Star r)
+
+-- | R^k is shorthand for the concatenation of k R's with each other.
+--
+-- >>> Single '0' `Regexp_.exp` 3
+-- (0(00))
+exp :: Regexp -> Int -> Regexp
+exp r k
+  | k <= 0 = error "Exponent must be strictly positive"
+  | otherwise = foldr1 Concat (replicate k r)
+
 -- | Simplify a regexp recursively.
 --
 -- >>> simplify $ Star Empty `Concat` Single 'a'
@@ -47,3 +67,11 @@ repeatedly f x = g x (f x)
     g x x'
       | x == x' = x
       | otherwise = g x' (f x')
+
+rev :: Regexp -> Regexp
+rev Empty = Empty
+rev Single_ε = Single_ε
+rev (Single a) = Single a
+rev (Union x y) = Union (rev x) (rev y)
+rev (Concat x y) = Concat (rev y) (rev x)
+rev (Star x) = Star (rev x)

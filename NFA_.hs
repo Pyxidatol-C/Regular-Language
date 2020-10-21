@@ -4,8 +4,8 @@ module NFA_ where
 import qualified DFA
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
-import qualified Regexp as R
 import NFA
+import qualified Regexp as R
 
 -- | Convert a DFA into an NFA - every DFA is (almost) automatically an NFA.
 fromDFA :: Ord a => DFA.DFA a -> NFA a
@@ -29,7 +29,7 @@ fromDFA d =
 -- Idea: Add a new start state with ε arrows leading to the two original start
 -- states, so that the machine nondeterministically "guesses" which NFA to use.
 -- The accept states are those of either of the automata.
-union :: Ord a => NFA a -> NFA a -> NFA Int
+union :: (Ord a, Ord b) => NFA a -> NFA b -> NFA Int
 union n1 n2
   | alphabet n1 /= alphabet n2 = error "Different alphabets"
   | otherwise =
@@ -68,7 +68,7 @@ union n1 n2
 -- Idea: Add ε arrows from the accept states of N1 to the start state of n2, so
 -- that the machine nondeterministically "guesses" where the language of N1
 -- ends. The accept states are those of N2.
-concat :: Ord a => NFA a -> NFA a -> NFA Int
+concat :: (Ord a, Ord b) => NFA a -> NFA b -> NFA Int
 concat n1 n2
   | alphabet n1 /= alphabet n2 = error "Different alphabets"
   | otherwise =
