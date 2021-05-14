@@ -4,6 +4,7 @@ module DFA where
 import qualified Data.List as L
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
+import GraphUtils (bfs)
 
 -- | Deterministic finite automata
 data DFA a = DFA
@@ -26,7 +27,7 @@ data DFA a = DFA
 -- * F ⊆ Q.
 isValid :: (Ord a, Show a) => DFA a -> Bool
 isValid d
-  | length missingKeys > 0 =
+  | not (null missingKeys) =
     error $ "Missing: " ++ L.intercalate ", " (map show missingKeys)
   | otherwise =
     q0 `S.member` qs
@@ -115,22 +116,12 @@ numberStates d = mapStates number d
     num = M.fromList $ zip qsList [0 ..]
     number = (num M.!)
 
-reachableStates :: Ord a => DFA a -> S.Set a
-reachableStates d = dfsExplore S.empty [startState d]
+reachableStates :: Ord a => DFA a -> S.Set (a, String)
+reachableStates d = bfs q0 next
   where
-    dfsExplore visited [] = visited
-    dfsExplore visited (v : vs) = dfsExplore visited' vs'
-      where
-        visited' = S.insert v visited
-        vNeighbours = S.map vUpon (alphabet d)
-        vUpon a = (transition d) M.! (v, a)
-        vs' =
-          [ u
-            | u <- S.toList vNeighbours,
-              u `S.notMember` visited',
-              u `notElem` vs
-          ]
-            ++ vs
+    q0 = startState d
+    next q = S.map (nextState q) (alphabet d)
+    nextState q a = (transition d M.! (q, a), a)
 
 removeUnreachableStates :: Ord a => DFA a -> DFA a
 removeUnreachableStates d =
@@ -140,13 +131,15 @@ removeUnreachableStates d =
       acceptStates = S.filter (`S.member` qs) (acceptStates d)
     }
   where
-    qs = reachableStates d
+    qs = S.map fst (reachableStates d)
     f (q, _) q' = q `S.member` qs && q' `S.member` qs
 
+reachableAcceptStates :: Ord a => DFA a -> S.Set (a, String)
+reachableAcceptStates d =
+  S.filter ((`S.member` acceptStates d) . fst) (reachableStates d)
+
 isLanguageEmpty :: Ord a => DFA a -> Bool
-isLanguageEmpty d = S.null qs
-  where
-    qs = (reachableStates d) `S.intersection` (acceptStates d)
+isLanguageEmpty d = S.null $ reachableAcceptStates d
 
 equivalentStates :: Ord a => DFA a -> [(a, a)]
 equivalentStates d = f startPairs
@@ -200,8 +193,8 @@ minimize d' =
       M.fromList
         [ ((qs, a), classOf q')
           | qs <- qss,
-            a <- as,
             let q = S.elemAt 0 qs,
+            a <- as,
             let q' = delta M.! (q, a)
         ]
     fs = [qs | qs <- qss, not $ S.null (acceptStates d `S.intersection` qs)]

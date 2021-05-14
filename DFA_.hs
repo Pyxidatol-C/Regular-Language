@@ -101,6 +101,15 @@ equivalent d1 d2 =
     d1Diffd2 = d1 `intersect` complement d2
     d2Diffd1 = d2 `intersect` complement d1
 
+whyNotEquivalent :: (Ord a, Ord b) => DFA a -> DFA b -> (S.Set String, S.Set String)
+whyNotEquivalent d1 d2 =
+  (in1Not2, in2Not1)
+  where
+    d1Diffd2 = d1 `intersect` complement d2
+    d2Diffd1 = d2 `intersect` complement d1
+    in1Not2 = S.map snd $ reachableAcceptStates d1Diffd2
+    in2Not1 = S.map snd $ reachableAcceptStates d2Diffd1
+
 fromRegexp :: S.Set Char -> R.Regexp -> DFA (S.Set (S.Set Int))
 fromRegexp alphabet r = case r of
   R.Empty -> toDFA r
