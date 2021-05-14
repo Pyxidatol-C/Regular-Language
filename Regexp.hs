@@ -4,7 +4,7 @@ module Regexp where
 -- | Regular expressions
 data Regexp
   = Single Char
-  | Single_ε
+  | SingleEmpty
   | Empty
   | Union Regexp Regexp
   | Concat Regexp Regexp
@@ -14,15 +14,11 @@ data Regexp
 instance Show Regexp where
   show r = case r of
     Single x -> [x]
-    Single_ε -> "ε"
+    SingleEmpty -> "ε"
     Empty -> "∅"
     Union r1 r2 -> "(" ++ show r1 ++ "∪" ++ show r2 ++ ")"
     Concat r1 r2 -> "(" ++ show r1 ++ show r2 ++ ")"
     Star r -> "(" ++ show r ++ "*)"
-
-instance Num Regexp where
-  r1 + r2 = r1 `Union` r2
-  r1 * r2 = r1 `Concat` r2
 
 -- | R+ is shorthand for RR*.
 --
@@ -48,12 +44,12 @@ simplify :: Regexp -> Regexp
 simplify (Union Empty r) = simplify r -- ∅ acts as identity for ∪
 simplify (Union r Empty) = simplify r
 simplify (Union r1 r2) = Union (simplify r1) (simplify r2)
-simplify (Concat Single_ε r) = simplify r -- ε acts as identity for ∘
-simplify (Concat r Single_ε) = simplify r
+simplify (Concat SingleEmpty r) = simplify r -- ε acts as identity for ∘
+simplify (Concat r SingleEmpty) = simplify r
 simplify (Concat Empty _) = Empty -- ∅ acts as zero for ∘
 simplify (Concat _ Empty) = Empty
 simplify (Concat r1 r2) = Concat (simplify r1) (simplify r2)
-simplify (Star Empty) = Single_ε -- (*) can only put together 0 strings from ∅
+simplify (Star Empty) = SingleEmpty -- (*) can only put together 0 strings from ∅
 simplify (Star r) = Star (simplify r)
 simplify r = r
 
@@ -70,7 +66,7 @@ repeatedly f x = g x (f x)
 
 rev :: Regexp -> Regexp
 rev Empty = Empty
-rev Single_ε = Single_ε
+rev SingleEmpty = SingleEmpty
 rev (Single a) = Single a
 rev (Union x y) = Union (rev x) (rev y)
 rev (Concat x y) = Concat (rev y) (rev x)

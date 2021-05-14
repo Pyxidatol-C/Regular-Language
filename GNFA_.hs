@@ -13,11 +13,11 @@ import Regexp
 --
 -- >>> single 'a' == Single 'a'
 -- True
--- >>> single NFA.emptyStr == Single_ε
+-- >>> single NFA.emptyStr == SingleEmpty
 -- True
 single :: Char -> Regexp
 single a
-  | a == NFA.emptyStr = Single_ε
+  | a == NFA.emptyStr = SingleEmpty
   | otherwise = Single a
 
 -- | Construct a GNFA from a DFA.
@@ -48,10 +48,10 @@ fromDFA d =
       M.unionsWith
         Union
         [ M.fromList [((s, q), Empty) | q <- qsList, q /= q0'],
-          M.singleton (s, q0') Single_ε,
+          M.singleton (s, q0') SingleEmpty,
           M.fromListWith Union (map transform (M.assocs δ')),
           M.fromList [((q, f), Empty) | q <- qsList, q `S.notMember` fs'],
-          M.fromList [((f0, f), Single_ε) | f0 <- S.toList fs']
+          M.fromList [((f0, f), SingleEmpty) | f0 <- S.toList fs']
         ]
     transform ((q1, a), q2) = ((q1, q2), single a)
     δ = fillTransition qs' s f arrows
@@ -80,10 +80,10 @@ fromNFA n =
       M.unionsWith
         Union
         [ M.fromList [((s, q), Empty) | q <- qsList, q /= q0'],
-          M.singleton (s, q0') Single_ε,
+          M.singleton (s, q0') SingleEmpty,
           M.fromListWith Union (concatMap transform (M.assocs δ')),
           M.fromList [((q, f), Empty) | q <- qsList, q `S.notMember` fs'],
-          M.fromList [((f0, f), Single_ε) | f0 <- S.toList fs']
+          M.fromList [((f0, f), SingleEmpty) | f0 <- S.toList fs']
         ]
     transform ((q, a), qs) = map (\q' -> ((q, q'), single a)) (S.toList qs)
     δ = fillTransition qs' s f arrows

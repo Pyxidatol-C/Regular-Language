@@ -104,7 +104,7 @@ equivalent d1 d2 =
 fromRegexp :: S.Set Char -> R.Regexp -> DFA (S.Set (S.Set Int))
 fromRegexp alphabet r = case r of
   R.Empty -> toDFA r
-  R.Single_ε -> toDFA r
+  R.SingleEmpty -> toDFA r
   R.Single _ -> toDFA r
   R.Union x y -> fromNFA' (fromRegexp' x `NFA_.union` fromRegexp' y)
   R.Concat x y -> fromNFA' (fromRegexp' x `NFA_.concat` fromRegexp' y)

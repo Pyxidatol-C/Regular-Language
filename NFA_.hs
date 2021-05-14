@@ -143,7 +143,7 @@ star n =
 -- >>> (fromRegexp (S.fromList "ab") R.Empty) `accepts` ""
 -- False
 --
--- >>> (fromRegexp (S.fromList "ab") R.Single_ε) `accepts` ""
+-- >>> (fromRegexp (S.fromList "ab") R.SingleEmpty) `accepts` ""
 -- True
 --
 -- >>> (fromRegexp (S.fromList "ab") (R.plus (R.Single 'a'))) `accepts` ""
@@ -173,7 +173,7 @@ fromRegexp alphabet' r = case r of
             startState = q0,
             acceptStates = qs'
           }
-  R.Single_ε ->
+  R.SingleEmpty ->
     let q0 = 0
         qs = S.singleton q0
      in NFA
