@@ -5,6 +5,7 @@ import qualified DFA
 import qualified GNFA
 import qualified GNFA_
 import qualified NFA
+import ParserRegexp (parseRegexp)
 import Regexp
 
 -- | Convert a DFA into a regexp.
@@ -20,3 +21,6 @@ fromDFA = GNFA.convert . GNFA_.fromDFA
 -- (((1(((1∪0)1)*))((1∪0)∪ε))∪ε)
 fromNFA :: Ord a => NFA.NFA a -> Regexp
 fromNFA = GNFA.convert . GNFA_.fromNFA
+
+fromString :: String -> Maybe Regexp
+fromString = parseRegexp
