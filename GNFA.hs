@@ -45,7 +45,7 @@ convert g@(GNFA {states = qs, transition = δ, startState = s, acceptState = f})
     kept (q1, q2) r = q1 /= qRip && q2 /= qRip
     δ' = M.mapWithKey update (M.filterWithKey kept δ)
     -- r4 = δ M.! (q1, q2)
-    update (q1, q2) r4 = (repeatedly simplify) r
+    update (q1, q2) r4 = r
       where
         r1 = δ M.! (q1, qRip)
         r2 = δ M.! (qRip, qRip)
@@ -66,7 +66,7 @@ fillTransition ::
   -- | The transition map filled with ∅ arrows where missing, using the fact
   -- that ∅ acts as the identity with respect to taking unions.
   Transition a
-fillTransition qs s f = M.map (repeatedly simplify) . M.unionWith Union empty
+fillTransition qs s f = M.unionWith Union empty
   where
     qsList = S.toList qs
     empty = M.fromList [((q1, q2), Empty) | q1 <- s : qsList, q2 <- f : qsList]
