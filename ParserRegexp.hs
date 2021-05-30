@@ -30,4 +30,4 @@ unionOp = R.Union <$ P.symbol "+"
 concatOp = R.Concat <$ P.symbol ""
 
 parseRegexp :: String -> Maybe R.Regexp
-parseRegexp = P.from regexp
+parseRegexp = P.from regexp . filter (/= ' ')
