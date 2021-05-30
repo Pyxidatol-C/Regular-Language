@@ -1,1 +1,11 @@
+# Mac OS X
 .DS_Store
+
+# Haskell compiler
+**.dyn_o
+**.dyn_hi
+**.hi
+**.o
+
+# Main
+eq-regexp
