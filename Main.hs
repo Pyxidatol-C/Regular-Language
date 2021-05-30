@@ -17,8 +17,8 @@ import System.Console.Haskeline
 main :: IO ()
 main = runInputT defaultSettings loop
   where
-    decorateSpec = I.colourBg I.Yellow . I.colourFg I.Black
-    decorateImpl = I.colourBg I.Cyan . I.colourFg I.Black
+    decorateSpec = I.colourBg I.Green . I.colourFg I.Black
+    decorateImpl = I.colourBg I.Red . I.colourFg I.White
     decorateStr s
       | null s = "ε"
       | otherwise = s
@@ -28,39 +28,39 @@ main = runInputT defaultSettings loop
 
     loop :: InputT IO ()
     loop = do
-      outputStrLn "      ___                    "
-      outputStrLn "     /  /\\          ___       "
-      outputStrLn $ "    /  /:/_        /  /\\     " ++ " _____"
-      outputStrLn $ "   /  /:/ /\\      /  /::\\    " ++ "|  __ \\"
-      outputStrLn $ "  /  /:/ /:/_    /  /:/\\:\\   " ++ "| |__) |___  __ _  _____  ___ __"
-      outputStrLn $ " /__/:/ /:/ /\\  /  /:/~/::\\  " ++ "|  _  // _ \\/ _` |/ _ \\ \\/ / '_ \\"
-      outputStrLn $ " \\  \\:\\/:/ /:/ /__/:/ /:/\\:\\ " ++ "| | \\ \\  __/ (_| |  __/>  <| |_) |"
-      outputStrLn $ "  \\  \\::/ /:/  \\  \\:\\/:/__\\/ " ++ "|_|  \\_\\___|\\__, |\\___/_/\\_\\ .__/"
-      outputStrLn $ "   \\  \\:\\/:/    \\  \\::/      " ++ "             __/ |         | |"
-      outputStrLn $ "    \\  \\::/      \\__\\/       " ++ "            |___/          |_|　"
-      outputStrLn "     \\__\\/"
-      outputStrLn ""
+      outputStrLn "\ESC[32m      ___                    "
+      outputStrLn "\ESC[32m     /  /\\          ___       "
+      outputStrLn $ "\ESC[32m    /  /:/_        /  /\\     " ++ "\ESC[31m _____"
+      outputStrLn $ "\ESC[32m   /  /:/ /\\      /  /::\\    " ++ "\ESC[31m|  __ \\"
+      outputStrLn $ "\ESC[32m  /  /:/ /:/_    /  /:/\\:\\   " ++ "\ESC[31m| |__) |___  __ _  _____  ___ __"
+      outputStrLn $ "\ESC[32m /__/:/ /:/ /\\  /  /:/~/::\\  " ++ "\ESC[31m|  _  // _ \\/ _` |/ _ \\ \\/ / '_ \\"
+      outputStrLn $ "\ESC[32m \\  \\:\\/:/ /:/ /__/:/ /:/\\:\\ " ++ "\ESC[31m| | \\ \\  __/ (_| |  __/>  <| |_) |"
+      outputStrLn $ "\ESC[32m  \\  \\::/ /:/  \\  \\:\\/:/__\\/ " ++ "\ESC[31m|_|  \\_\\___|\\__, |\\___/_/\\_\\ .__/"
+      outputStrLn $ "\ESC[32m   \\  \\:\\/:/    \\  \\::/      " ++ "\ESC[31m             __/ |         | |"
+      outputStrLn $ "\ESC[32m    \\  \\::/      \\__\\/       " ++ "\ESC[31m            |___/          |_|　"
+      outputStrLn "\ESC[32m     \\__\\/"
+      outputStrLn "\ESC[32m"
 
-      outputStrLn $ I.colourFg I.Cyan "[Tip] " ++ "Write `+` for ∪ (\\cup), `$` for ε (\\epsilon), and whitespaces as you please;"
+      outputStrLn $ I.colourFg I.Cyan "[Tip] " ++ "Write `+` for ∪ (\\cup), `$` for ε (\\epsilon), and spaces as you please;"
       outputStrLn $ I.colourFg I.Cyan "[Tip] " ++ "for example, `(0+10)*(1+$)` or `(0 + 10)* (1+$)`."
       outputStrLn ""
 
-      specInput <- getInputLine $ I.colourFg I.Yellow "[?] " ++ decorateSpec "Spec" ++ "ification regexp: "
+      specInput <- getInputLine $ I.colourFg I.Yellow "[?] " ++ decorateSpec "Spec" ++ "ification regexp:\ESC[34m  "
       let spec = fromJust $ R_.fromString (fromJust specInput)
       let dSpec = D_.fromRegexp (R.alphabet spec) spec
-      outputStrLn $ I.colourFg I.Cyan "[!] " ++ "Constructed minimal DFA with " ++ (show . S.size . D.states) dSpec ++ " states"
-      outputStrLn ""
+      outputStrLn $ I.colourFg I.Cyan "[.] " ++ "Constructed minimal DFA with " ++ (show . S.size . D.states) dSpec ++ " states"
+      outputStrLn "\ESC[0m"
 
-      implInput <- getInputLine $ I.colourFg I.Yellow "[?] " ++ decorateImpl "Impl" ++ "ementation regexp: "
+      implInput <- getInputLine $ I.colourFg I.Yellow "[?] " ++ decorateImpl "Impl" ++ "ementation regexp:\ESC[34m "
       let impl = fromJust $ R_.fromString (fromJust implInput)
       let dImpl' = D_.fromRegexp (R.alphabet impl) impl
-      outputStrLn $ I.colourFg I.Cyan "[!] " ++ "Constructed minimal DFA with " ++ (show . S.size . D.states) dImpl' ++ " states"
-      needsNegate <- getInputLine $ I.colourFg I.Yellow "[?] " ++ "Negate implementation (y/N) ? "
+      outputStrLn $ I.colourFg I.Cyan "[.] " ++ "Constructed minimal DFA with " ++ (show . S.size . D.states) dImpl' ++ " states"
+      needsNegate <- getInputLine $ I.colourFg I.Yellow "[?] " ++ "Negate implementation (y/N) ?\ESC[34m "
       let dImpl =
             if needsNegate == Just "y" || needsNegate == Just "Y"
               then D_.complement dImpl'
               else dImpl'
-      outputStrLn ""
+      outputStrLn "\ESC[0m"
 
       let diffs = D_.whyNotEquivalent dSpec dImpl
 
@@ -77,4 +77,6 @@ main = runInputT defaultSettings loop
           outputStrLn ""
 
       when (S.null (uncurry S.union diffs)) $
-        outputStrLn $ I.colourFg I.Green "[!] " ++ "Equivalent"
+        do
+          outputStrLn $ I.colourFg I.Green "[.] " ++ "Equivalent"
+          outputStrLn ""
