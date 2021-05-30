@@ -1,6 +1,8 @@
 -- | Definition and simplification of regular expressions
 module Regexp where
 
+import qualified Data.Set as S
+
 -- | Regular expressions
 data Regexp
   = Single Char
@@ -52,3 +54,11 @@ rev (Single a) = Single a
 rev (Union x y) = Union (rev x) (rev y)
 rev (Concat x y) = Concat (rev y) (rev x)
 rev (Star x) = Star (rev x)
+
+alphabet :: Regexp -> S.Set Char
+alphabet Empty = S.empty
+alphabet SingleEmpty = S.empty
+alphabet (Single a) = S.singleton a
+alphabet (Union x y) = S.union (alphabet x) (alphabet y)
+alphabet (Concat x y) = S.union (alphabet x) (alphabet y)
+alphabet (Star x) = alphabet x
