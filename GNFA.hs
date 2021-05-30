@@ -3,7 +3,7 @@ module GNFA where
 
 import qualified Data.Map as M
 import qualified Data.Set as S
-import Regexp
+import Regexp (Regexp (Concat, Empty, Star, Union))
 
 type Transition a = M.Map (a, a) Regexp
 
@@ -36,7 +36,7 @@ data GNFA a = GNFA
 -- we can remove the state q_rip and replace the regexp on the q_i -> q_j arrow
 -- with R1 R2* R3 ∪ R4 to get an equivalent GNFA with 1 less state.
 convert :: Ord a => GNFA a -> Regexp
-convert g@(GNFA {states = qs, transition = δ, startState = s, acceptState = f})
+convert g@GNFA {states = qs, transition = δ, startState = s, acceptState = f}
   | S.null qs = δ M.! (s, f)
   | otherwise = convert g {states = qs', transition = δ'}
   where
