@@ -18,7 +18,10 @@
 
 Docs hosted at https://pyxidatol-c.github.io/Regular-Language/ (incomplete).
 
-## Regexp equality testing
+## CLI: Regexp equality testing
+Checks whether the specification regexp and (possibly the complement of) the implementation regexp are equivalent.
+If not, a list of strings accepted by one but not the other will be displayed.
+
 ### Usage
 ```sh
 ghc Main.hs -o eq-regexp
