@@ -20,7 +20,7 @@ nextPly next ply0 plys =
   let nextPly' _ [] = []
       nextPly' qs ((q, as) : vs) =
         let neighbours =
-              [ (q', a' : as)
+              [ (q', as ++ [a'])
                 | (q', a') <- S.toList $ next q,
                   all (S.notMember q' . S.map fst) plys,
                   q' `notElem` qs
