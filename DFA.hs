@@ -18,7 +18,7 @@ data DFA a = DFA
     startState :: a,
     -- | F ⊆ Q, the set of accept (or final) states
     acceptStates :: S.Set a
-  }
+  } deriving Show
 
 -- | Checks if the given DFA (Q, Σ, δ, q0, F) is valid:
 --

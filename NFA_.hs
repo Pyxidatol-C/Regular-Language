@@ -197,3 +197,32 @@ fromRegexp alphabet' r = case r of
   R.Concat r1 r2 ->
     fromRegexp alphabet' r1 `NFA_.concat` fromRegexp alphabet' r2
   R.Star r' -> star (fromRegexp alphabet' r')
+
+
+reverse :: (Ord a) => NFA a -> NFA Int
+reverse n =
+  NFA
+    { states = states'
+    , alphabet = alph
+    , transition = fillTransition states' alph (M.union epsTransition revTransition)
+    , startState = q0'
+    , acceptStates = S.singleton (startState n')
+    }
+ where
+  n' = numberStates n
+  q0' = S.size (states n')
+  states' = S.singleton q0' `S.union` states n'
+  alph = alphabet n
+  epsTransition = M.fromList [((q0', emptyStr), acceptStates n')]
+  revTransition =
+    M.fromList
+      [ ( (q, a)
+        , S.fromList
+            [ q'
+            | q' <- S.toList (states n')
+            , q `elem` transition n' M.! (q', a)
+            ]
+        )
+      | q <- S.toList (states n')
+      , a <- emptyStr : S.toList alph
+      ]

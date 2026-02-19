@@ -23,7 +23,7 @@ data NFA a = NFA
     startState :: a,
     -- | F ⊆ Q, the set of accept (or final) states
     acceptStates :: S.Set a
-  }
+  } deriving Show
 
 -- | Checks if the given NFA (Q, Σ, δ, q0, F) is valid:
 --
